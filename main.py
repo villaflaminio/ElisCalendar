@@ -1,17 +1,16 @@
 import xlrd
-import xlwt
 import datetime
 import time
 import requests
 import ssl
-from  credentials import googleCalendar as myCalendar
+# from credentials_google import googleCalendar as myCalendar
 import json
 
 #WebSSL certificates
 ssl._create_default_https_context = ssl._create_unverified_context
 #download the xlsx file from the link
-link = "https://cedelcloud-my.sharepoint.com/:x:/g/personal/g_tomeno_elis_org/EdfyxBa5gSFNivc2-aj7G0IB48bm609wlXrkbQc7ITLoww?download=1"
-
+#link = "https://cedelcloud-my.sharepoint.com/:x:/g/personal/g_tomeno_elis_org/EdfyxBa5gSFNivc2-aj7G0IB48bm609wlXrkbQc7ITLoww?download=1"
+link = "https://cedelcloud-my.sharepoint.com/:x:/g/personal/a_leone_elis_org/ER38EIB-fexBhLuSJYW0cioBg7WFp-YeDok9FzLLD6Bj3w?e=J2poxX"
 #Defining vars
 listEventi = []
 #insert the time range
@@ -24,48 +23,47 @@ def getList():
     webFile = requests.get(link)
 
     #Open Workbook
-    wb = xlrd.open_workbook(file_contents=webFile.content)
+    wb = xlrd.open_workbook('Calendario.xlsx')
 
     #check the sheet index I want
     namesSheets = wb.sheet_names()
     sheetIndex=0
     for name in namesSheets:
-        if(name == "2 anno AA 20-21" ):
+        if(name == "3 anno Intensive AA 21-22" ):
             break
         else:
             sheetIndex+=1
 
-    print("Sheet 2 anno AA 20-21 index:",sheetIndex)
+    print("3 anno Intensive AA 21-22 index:",sheetIndex)
+    convertedFromXlsx = []
 
     #select the index of the sheet
     sheet = wb.sheet_by_index(sheetIndex)
 
-    # the first month of the calendar, 10 = october
-    startMonth = 10
+    startMonth = 9
     # select the year
-    startYear = 2020
+    startYear = 2021
 
     #the number of the month in the exel file
-    monthNumber = 10
-    hourNumber = 7
+    monthNumber = 11
+    hourNumber = 8
 
     for z in range(0, monthNumber): #for each month = z
-        currentColumnMonth = z * 10
+        currentColumnMonth = z * 11
         if (startMonth == 13): #startMonth is a int and when it goes over 12 i need to reset the year
             startMonth = 1
             startYear += 1
 
-        for i in range(sheet.nrows): # i= row
-            if (i != 0 and i<35): # i need to skip the first blank row and 
+        for i in range(2,sheet.nrows): # i= row
+            if (i != 0 and i<35): # i need to skip the first blank row and
                 if (sheet.cell_value(i, currentColumnMonth) != ""): #check the value if it is not null
                     dataNum = int(sheet.cell_value(i, currentColumnMonth))
                     completeData = [int(startYear),int(startMonth),int(dataNum)]
-
                     # cycle foreach hour
                     j = 2 #increment number for getting the right column
                     for n in range(0, hourNumber): # number of hours of lessons
                         subject = sheet.cell_value(i, j + currentColumnMonth) # get the subject
-                        Time = (sheet.cell_value(1, j + currentColumnMonth)).split("-") #get the time splitted
+                        Time = (sheet.cell_value(2, j + currentColumnMonth)).split("-") #get the time splitted
                         #splitting the unic time in start and end time
                         startTime = Time[0].split(",")
                         endTime =Time[1].split(",")
@@ -76,6 +74,7 @@ def getList():
 
                         if (subject and subject!="x"): # i there is a subject i add the event
                             listEventi.append({"Subject":subject, "StartDateTime":startDateTime,"EndDateTime":endDateTime})
+                            print({"Subject":subject, "StartDateTime":startDateTime,"EndDateTime":endDateTime})
                         j += 1 # i move a column further for getting the next hour
         startMonth += 1 # increment the int month counter
 
@@ -127,7 +126,8 @@ def updateList(updated_list_events):
 
 def googleOps(): #google calendar operations
     getList()
-    updateList(listEventi)
+    # updateList(listEventi)
+
     #should i check if the new update has the same event list of the last one
     #If true skip the update
     #IF not update
